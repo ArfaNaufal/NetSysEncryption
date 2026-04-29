@@ -61,7 +61,7 @@ func main() {
 	go receiveMessages()
 
 	for {
-		fmt.Printf("\n-- Menu [%s] --\n1. Chat\n2. Keluar\nPilih > ", myName)
+		fmt.Printf("\n-- Menu [%s] --\n1. Chat\n2. Keluar\n> ", myName)
 		scanner.Scan()
 		choice := scanner.Text()
 
@@ -160,7 +160,7 @@ func chatLoop(target string, scanner *bufio.Scanner) {
 
 	fmt.Println("--- Ketik pesan (/exit untuk kembali) ---")
 	for {
-		fmt.Print("You > ")
+		fmt.Printf("To %s > ", target)
 		scanner.Scan()
 		text := scanner.Text()
 
@@ -196,7 +196,7 @@ func receiveMessages() {
 		}
 
 		if msg.Type == "error" {
-			fmt.Printf("\n[Server]: %s\nYou > ", msg.Payload)
+			fmt.Printf("\n[Server]: %s\n> ", msg.Payload)
 			continue
 		}
 
@@ -236,9 +236,9 @@ func receiveMessages() {
 		}
 
 		if decryptErr != nil {
-			fmt.Printf("\n[Error Dekripsi dari %s]: %v\nYou > ", msg.From, decryptErr)
+			fmt.Printf("\n[Error Dekripsi dari %s]: %v\n> ", msg.From, decryptErr)
 		} else {
-			fmt.Printf("\n[%s]: %s\nYou > ", msg.From, string(plaintext))
+			fmt.Printf("\nFrom %s: %s\n> ", msg.From, string(plaintext))
 		}
 	}
 }
