@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -32,6 +33,20 @@ var (
 	serializer *serialize.Serializer
 )
 
+var tlsConfig = &tls.Config{
+	InsecureSkipVerify: true,
+}
+
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		TLSClientConfig: tlsConfig,
+	},
+}
+
+var wsClient = websocket.Dialer{
+	TLSClientConfig: tlsConfig,
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -49,8 +64,8 @@ func main() {
 
 	generateAndRegisterKeys()
 
-	serverURL := fmt.Sprintf("ws://localhost:8080/ws/%s?token=%s", myName, myToken)
-	conn, _, err := websocket.DefaultDialer.Dial(serverURL, nil)
+	serverURL := fmt.Sprintf("wss://localhost:8080/ws/%s?token=%s", myName, myToken)
+	conn, _, err := wsClient.Dial(serverURL, nil)
 	if err != nil {
 		fmt.Println("[Error] Gagal terhubung ke WebSocket server.")
 		os.Exit(1)
@@ -108,7 +123,7 @@ func generateAndRegisterKeys() {
 	}
 
 	body, _ := json.Marshal(payload)
-	resp, err := http.Post(fmt.Sprintf("http://localhost:8080/register/%s", myName), "application/json", bytes.NewBuffer(body))
+	resp, err := httpClient.Post(fmt.Sprintf("https://localhost:8080/register/%s", myName), "application/json", bytes.NewBuffer(body))
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Error] Gagal mendaftar. Nama sudah terpakai atau token salah.")
 		os.Exit(1)
@@ -122,7 +137,7 @@ func chatLoop(target string, scanner *bufio.Scanner) {
 	hasSession, _ := store.ContainsSession(context.TODO(), targetAddr)
 	if !hasSession {
 		fmt.Printf("[System] Meminta kunci publik %s...\n", target)
-		resp, err := http.Get(fmt.Sprintf("http://localhost:8080/bundle/%s", target))
+		resp, err := httpClient.Get(fmt.Sprintf("https://localhost:8080/bundle/%s", target))
 		if err != nil || resp.StatusCode != http.StatusOK {
 			fmt.Println("[Error] Target tidak ditemukan atau sedang offline.")
 			return
