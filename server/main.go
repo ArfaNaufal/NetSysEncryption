@@ -27,5 +27,5 @@ func main() {
 	e.POST("/register/:id", handleRegister)
 	e.GET("/bundle/:id", handleGetBundle)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.StartTLS(":8080", "server.crt", "server.key"))
 }
